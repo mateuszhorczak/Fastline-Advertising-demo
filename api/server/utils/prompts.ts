@@ -41,8 +41,10 @@ FIELDS:
   ("184 500,00 zł" -> 184500, "4,2 mln zł" -> 4200000). currency is ISO 4217 ("zł" -> "PLN",
   "€" -> "EUR"). context briefly says what the amount is, incl. net/gross and period when stated.
   At most 25 most important amounts, no duplicates.
-- dates: specific calendar dates (day precision) as YYYY-MM-DD with a short context. Skip dates
-  without a day (e.g. "I kwartał 2027"). At most 25 most important dates, no duplicates.
+- dates: specific calendar dates (day precision) as YYYY-MM-DD with a short context. A date must
+  appear in the text with its day. Never add a day yourself: month or quarter references
+  (e.g. "wrzesień 2025" in a table, "I kwartał 2027") are skipped. Copy the day exactly as written
+  ("2 kwietnia 2026" -> 2026-04-02). At most 25 most important dates, no duplicates.
 - keywords: 5–10 topical keywords in the document's language.`
 
 export const MERGE_SYSTEM_PROMPT = `You receive JSON with partial analyses of consecutive fragments of

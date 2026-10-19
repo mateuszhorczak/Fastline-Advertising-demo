@@ -18,6 +18,8 @@ export interface InjectionMatch {
 }
 
 const CONTEXT_CHARS = 40
+/** Trafienia bliżej siebie niż ta liczba znaków traktujemy jako jeden fragment. */
+const MERGE_GAP = 150
 
 /** Rozszerza zakres do granic słów, żeby fragment nie zaczynał się w połowie wyrazu. */
 function expandToWords(text: string, start: number, end: number): [number, number] {
@@ -37,12 +39,12 @@ export function detectInjection(text: string): InjectionMatch[] {
     if (match) ranges.push(expandToWords(normalized, match.index, match.index + match[0].length))
   }
 
-  // kilka wzorców trafia zwykle w ten sam akapit — łączymy nachodzące na siebie zakresy
+  // kilka wzorców trafia zwykle w ten sam akapit — łączymy bliskie zakresy w jeden fragment
   ranges.sort((a, b) => a[0] - b[0])
   const merged: [number, number][] = []
   for (const range of ranges) {
     const last = merged.at(-1)
-    if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1])
+    if (last && range[0] - last[1] <= MERGE_GAP) last[1] = Math.max(last[1], range[1])
     else merged.push(range)
   }
 

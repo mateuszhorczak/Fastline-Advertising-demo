@@ -60,6 +60,17 @@ describe('generateStructured', () => {
     expect(fetchMock.mock.calls[1]?.[0]).toContain('/fallback:generateContent')
   })
 
+  it('po przekroczeniu czasu używa modelu zapasowego', async () => {
+    const fetchMock = vi.fn<typeof fetch>()
+    fetchMock.mockRejectedValueOnce(new DOMException('timeout', 'TimeoutError'))
+    fetchMock.mockResolvedValueOnce(geminiReply({ text: 'ok' }))
+    vi.stubGlobal('fetch', fetchMock)
+    await expect(generateStructured(config, request)).resolves.toMatchObject({
+      data: { text: 'ok' },
+    })
+    expect(fetchMock.mock.calls[1]?.[0]).toContain('/fallback:generateContent')
+  })
+
   it('gdy oba modele są niedostępne, zwraca czytelny błąd', async () => {
     mockFetch(new Response('', { status: 503 }), new Response('', { status: 429 }))
     const error = await generateStructured(config, request).catch((e: unknown) => e)

@@ -3,7 +3,8 @@ import { ApiError } from './errors'
 import { toGeminiSchema } from './json-schema'
 
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
-const TIMEOUT_MS = 25_000
+/** Limit na jedno wywołanie — dwa (główny + zapasowy) mieszczą się w ~30 s z briefu. */
+const TIMEOUT_MS = 18_000
 
 export type Part = { text: string } | { inlineData: { mimeType: string; data: string } }
 
@@ -34,7 +35,8 @@ async function callModel(model: string, apiKey: string, body: object): Promise<s
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
   } catch {
-    throw new ApiError(504, 'ai_timeout', 'Usługa AI nie odpowiedziała na czas. Spróbuj ponownie.')
+    // przekroczony czas lub błąd sieci — warto spróbować modelu zapasowego
+    throw new OverloadedError(`${model}: timeout or network error`)
   }
 
   if (response.status === 429 || response.status >= 500) {

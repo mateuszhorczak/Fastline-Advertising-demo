@@ -6,7 +6,7 @@
   "vars": {
     // CORS: tylko domena demo (origin nie zawiera ścieżki /repo/)
     "NITRO_ALLOWED_ORIGINS": "https://mateuszhorczak.github.io",
-    "NITRO_GEMINI_MODEL": "gemini-3.8-flash",
+    "NITRO_GEMINI_MODEL": "gemini-3.6-flash",
     "NITRO_GEMINI_FALLBACK_MODEL": "gemini-3.5-flash-lite",
   },
   // klucz API ustawiany poza repo: `wrangler secret put NITRO_GEMINI_API_KEY`

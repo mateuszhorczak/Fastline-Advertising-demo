@@ -63,7 +63,10 @@ export function buildResult(input: PostprocessInput): AnalysisResult {
   if (input.ocrPages.length > 0) {
     warnings.push({
       code: 'ocr_used',
-      message: `Strony ${input.ocrPages.join(', ')} nie miały warstwy tekstowej i zostały odczytane przez OCR — możliwe błędy odczytu.`,
+      message:
+        input.ocrPages.length === 1
+          ? `Strona ${input.ocrPages.join('')} nie miała warstwy tekstowej i została odczytana przez OCR — możliwe błędy odczytu.`
+          : `Strony ${input.ocrPages.join(', ')} nie miały warstwy tekstowej i zostały odczytane przez OCR — możliwe błędy odczytu.`,
     })
   }
 

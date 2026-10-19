@@ -19,6 +19,8 @@ FACTS ONLY:
   (no sums or conversions that the document does not state). Missing information: null or [].
 - Pages are marked "--- Strona N ---". Pages marked "(OCR)" were read from a scan and may contain
   recognition errors; use them, but do not invent what is unreadable.
+- Keep the document's own terms. Do not relabel one concept as another: e.g. a "budget" is not the
+  "remuneration", a net amount is not a gross amount, a planned date is not a signed date.
 - Write all values in the language of the document; keys stay as in the schema.
 
 FIELDS:

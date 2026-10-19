@@ -1,4 +1,4 @@
-import type { AnalysisResult } from '@pdf-insight/shared'
+import { type AnalysisResult, LIMITS } from '@pdf-insight/shared'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiRequestError, analyzeDocument, ocrPage } from '../api/client'
 import { validatePdfFile } from './file-validation'
@@ -85,7 +85,7 @@ export function useAnalysis(onResult: (result: AnalysisResult) => void) {
                   ...result.warnings,
                   {
                     code: 'ocr_skipped',
-                    message: `Strony ${pdf.skippedPages.join(', ')} nie mają warstwy tekstowej i przekraczają limit OCR — nie zostały przeanalizowane.`,
+                    message: `Strony bez warstwy tekstowej ponad limit OCR (${LIMITS.maxOcrPages}) nie zostały przeanalizowane: ${pdf.skippedPages.join(', ')}.`,
                   },
                 ],
               }

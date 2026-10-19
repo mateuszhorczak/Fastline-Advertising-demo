@@ -33,6 +33,8 @@ export default tseslint.config(
   {
     files: ['api/**/*.ts'],
     languageOptions: { globals: globals.worker },
+    // logi błędów trafiają do Cloudflare Workers Logs
+    rules: { 'no-console': ['error', { allow: ['warn', 'error'] }] },
   },
   prettier,
 )

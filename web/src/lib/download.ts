@@ -15,5 +15,6 @@ export function downloadJson(result: AnalysisResult): void {
   link.href = url
   link.download = jsonFileName(result.document.fileName)
   link.click()
-  URL.revokeObjectURL(url)
+  // zwolnienie adresu od razu po click() potrafi przerwać pobieranie (np. w Firefoksie)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }

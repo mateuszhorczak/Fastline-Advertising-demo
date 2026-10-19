@@ -8,7 +8,7 @@ export type AnalysisStep = 'reading' | 'ocr' | 'analyzing'
 
 export type AnalysisState =
   | { status: 'idle' }
-  | { status: 'working'; fileName: string; step: AnalysisStep; detail?: string }
+  | { status: 'working'; fileName: string; step: AnalysisStep; usedOcr: boolean; detail?: string }
   | { status: 'done'; result: AnalysisResult }
   | { status: 'error'; message: string; canRetry: boolean }
 
@@ -39,26 +39,42 @@ export function useAnalysis(onResult: (result: AnalysisResult) => void) {
 
       const fileName = file.name.slice(0, 255)
       try {
-        setState({ status: 'working', fileName, step: 'reading' })
+        setState({ status: 'working', fileName, step: 'reading', usedOcr: false })
         // pdf.js (~1 MB) ładujemy dopiero, gdy jest potrzebny
         const { extractPdf } = await import('./pdf')
         const pdf = await extractPdf(file)
 
         const pages = [...pdf.pages]
         let done = 0
-        if (pdf.scannedPages.length > 0) {
-          const total = pdf.scannedPages.length
-          setState({ status: 'working', fileName, step: 'ocr', detail: `0 z ${total}` })
-          await Promise.all(
-            pdf.scannedPages.map(async (pageNumber) => {
-              const text = await ocrPage(await pdf.renderPage(pageNumber), abort.signal)
-              pages[pageNumber - 1] = text
-              done++
-              if (!abort.signal.aborted) {
-                setState({ status: 'working', fileName, step: 'ocr', detail: `${done} z ${total}` })
-              }
-            }),
-          )
+        try {
+          if (pdf.scannedPages.length > 0) {
+            const total = pdf.scannedPages.length
+            setState({
+              status: 'working',
+              fileName,
+              step: 'ocr',
+              usedOcr: true,
+              detail: `0 z ${total}`,
+            })
+            await Promise.all(
+              pdf.scannedPages.map(async (pageNumber) => {
+                const text = await ocrPage(await pdf.renderPage(pageNumber), abort.signal)
+                pages[pageNumber - 1] = text
+                done++
+                if (!abort.signal.aborted) {
+                  setState({
+                    status: 'working',
+                    fileName,
+                    step: 'ocr',
+                    usedOcr: true,
+                    detail: `${done} z ${total}`,
+                  })
+                }
+              }),
+            )
+          }
+        } finally {
+          void pdf.destroy()
         }
 
         if (pages.every((page) => page.trim().length === 0)) {
@@ -70,7 +86,12 @@ export function useAnalysis(onResult: (result: AnalysisResult) => void) {
           return
         }
 
-        setState({ status: 'working', fileName, step: 'analyzing' })
+        setState({
+          status: 'working',
+          fileName,
+          step: 'analyzing',
+          usedOcr: pdf.scannedPages.length > 0,
+        })
         const result = await analyzeDocument(
           { fileName, pages, ocrPages: pdf.scannedPages },
           abort.signal,

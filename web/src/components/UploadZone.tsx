@@ -29,7 +29,10 @@ export function UploadZone({ onFile, disabled = false, compact = false }: Upload
         event.preventDefault()
         if (!disabled) setDragging(true)
       }}
-      onDragLeave={() => setDragging(false)}
+      onDragLeave={(event) => {
+        // dragleave odpala się też przy wejściu nad element potomny — ignorujemy to
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false)
+      }}
       onDrop={handleDrop}
       className={`rounded-2xl border-2 border-dashed text-center transition-colors ${
         compact ? 'px-4 py-5' : 'px-6 py-12'

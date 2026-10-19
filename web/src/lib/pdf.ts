@@ -15,6 +15,8 @@ GlobalWorkerOptions.workerSrc = workerUrl
 /** Strona z mniejszą liczbą znaków traktowana jest jako skan bez warstwy tekstowej. */
 const MIN_TEXT_CHARS = 20
 const OCR_SCALE = 2
+/** Dłuższy bok obrazu do OCR — duże formaty (np. A0) zmniejszamy, by zmieścić się w limicie. */
+const OCR_MAX_SIDE = 2400
 const JPEG_QUALITY = 0.8
 
 export interface ExtractedPdf {
@@ -24,6 +26,8 @@ export interface ExtractedPdf {
   /** Strony bez tekstu ponad limit OCR. */
   skippedPages: number[]
   renderPage: (pageNumber: number) => Promise<string>
+  /** Zwalnia pamięć zajętą przez dokument w pdf.js. */
+  destroy: () => Promise<void>
 }
 
 async function pageToText(page: PDFPageProxy): Promise<string> {
@@ -35,7 +39,9 @@ async function pageToText(page: PDFPageProxy): Promise<string> {
 
 /** Renderuje stronę do JPEG (base64 bez prefiksu) do wysłania na OCR. */
 async function pageToJpeg(page: PDFPageProxy): Promise<string> {
-  const viewport = page.getViewport({ scale: OCR_SCALE })
+  const { width, height } = page.getViewport({ scale: 1 })
+  const scale = Math.min(OCR_SCALE, OCR_MAX_SIDE / Math.max(width, height))
+  const viewport = page.getViewport({ scale })
   const canvas = document.createElement('canvas')
   canvas.width = Math.floor(viewport.width)
   canvas.height = Math.floor(viewport.height)
@@ -48,9 +54,11 @@ async function pageToJpeg(page: PDFPageProxy): Promise<string> {
 export async function extractPdf(file: File): Promise<ExtractedPdf> {
   const data = new Uint8Array(await file.arrayBuffer())
 
+  // w pdf.js 6 pamięć zwalnia się przez zadanie ładowania, nie przez sam dokument
+  const loadingTask = getDocument({ data })
   let pdf
   try {
-    pdf = await getDocument({ data }).promise
+    pdf = await loadingTask.promise
   } catch (error) {
     if (error instanceof PasswordException) {
       throw new PdfReadError('Plik jest zabezpieczony hasłem — zdejmij hasło i spróbuj ponownie.')
@@ -62,6 +70,7 @@ export async function extractPdf(file: File): Promise<ExtractedPdf> {
   }
 
   if (pdf.numPages > LIMITS.maxPages) {
+    await loadingTask.destroy()
     throw new PdfReadError(`Dokument ma ${pdf.numPages} stron — maksymalnie ${LIMITS.maxPages}.`)
   }
 
@@ -78,5 +87,6 @@ export async function extractPdf(file: File): Promise<ExtractedPdf> {
     scannedPages: withoutText.slice(0, LIMITS.maxOcrPages),
     skippedPages: withoutText.slice(LIMITS.maxOcrPages),
     renderPage: async (pageNumber) => pageToJpeg(await pdf.getPage(pageNumber)),
+    destroy: () => loadingTask.destroy(),
   }
 }

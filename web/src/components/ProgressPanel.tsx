@@ -10,11 +10,14 @@ const STEPS: { id: AnalysisStep; label: string }[] = [
 interface ProgressPanelProps {
   fileName: string
   step: AnalysisStep
+  usedOcr: boolean
   detail?: string | undefined
 }
 
-export function ProgressPanel({ fileName, step, detail }: ProgressPanelProps) {
-  const currentIndex = STEPS.findIndex((s) => s.id === step)
+export function ProgressPanel({ fileName, step, usedOcr, detail }: ProgressPanelProps) {
+  // krok OCR pokazujemy tylko wtedy, gdy dokument ma strony bez tekstu
+  const steps = STEPS.filter((s) => s.id !== 'ocr' || usedOcr || step === 'ocr')
+  const currentIndex = steps.findIndex((s) => s.id === step)
 
   return (
     <section
@@ -25,7 +28,7 @@ export function ProgressPanel({ fileName, step, detail }: ProgressPanelProps) {
       <h2 className="text-lg font-semibold">Analizuję dokument…</h2>
       <p className="mt-1 truncate text-sm text-slate-600">{fileName}</p>
       <ol className="mt-5 space-y-3">
-        {STEPS.map((s, index) => {
+        {steps.map((s, index) => {
           const isDone = index < currentIndex
           const isCurrent = index === currentIndex
           return (

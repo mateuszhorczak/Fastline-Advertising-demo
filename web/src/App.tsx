@@ -37,7 +37,7 @@ export function App() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1fr_320px]">
+      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-5">
           {state.status === 'done' ? (
             <ResultView result={state.result} onNew={reset} />
@@ -45,7 +45,12 @@ export function App() {
             <>
               <UploadZone onFile={(file) => void analyze(file)} disabled={isWorking} />
               {state.status === 'working' && (
-                <ProgressPanel fileName={state.fileName} step={state.step} detail={state.detail} />
+                <ProgressPanel
+                  fileName={state.fileName}
+                  step={state.step}
+                  usedOcr={state.usedOcr}
+                  detail={state.detail}
+                />
               )}
               {state.status === 'error' && (
                 <ErrorPanel

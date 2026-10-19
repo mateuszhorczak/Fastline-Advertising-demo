@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.output/
+.nitro/
+.wrangler/
+coverage/
+*.tsbuildinfo
+
+# sekrety — nigdy w repo
+.env
+.env.*
+!.env.example
+.dev.vars

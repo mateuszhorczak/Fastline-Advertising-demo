@@ -1,0 +1,8 @@
+{
+  "extends": ["../tsconfig.base.json", "./.nitro/types/tsconfig.json"],
+  "compilerOptions": {
+    "lib": ["ES2023", "WebWorker"],
+    "types": []
+  },
+  "include": ["server", "nitro.config.ts", ".nitro/types/nitro.d.ts"]
+}
